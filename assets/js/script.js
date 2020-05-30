@@ -4,10 +4,15 @@ var taskIdCounter = 0;
 var pageContentEl = document.querySelector("#page-content");
 var tasksInProgressEl = document.querySelector("#tasks-in-progress");
 var tasksCompletedEl = document.querySelector("#tasks-completed");
+
+var tasks = []
+
 var taskFormHandler = function (event) {
   event.preventDefault();
   var taskNameInput = document.querySelector("input[name='task-name']").value;
   var taskTypeInput = document.querySelector("select[name='task-type']").value;
+  
+
 
   if (!taskNameInput || !taskTypeInput) {
     alert("You need to fill out the task form!");
@@ -18,6 +23,7 @@ var taskFormHandler = function (event) {
   var taskDataObj = {
     name: taskNameInput,
     type: taskTypeInput,
+    status: "to do"
   };
 
   if (isEdit) {
@@ -28,6 +34,7 @@ var taskFormHandler = function (event) {
     var taskDataObj = {
       name: taskNameInput,
       type: taskTypeInput,
+      status: "to do"
     };
     createTaskEl(taskDataObj);
   }
@@ -39,10 +46,17 @@ var completedEditTask = function (taskName, taskType, taskId) {
   taskSelected.querySelector("h3.task-name").textContent = taskName;
   taskSelected.querySelector("span.task-type").textContent = taskType;
 
+  for (var i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === parseInt(taskId)) {
+      tasks[i].Name;
+      tasks[i].taskType;
+    }
+  }
   alert("Task Updated!")
 
   formEl.removeAttribute("data-task-id");
   document.querySelector("#save-task").textContent = "Add Task";
+  saveTasks();
 }
 
 var createTaskEl = function (taskDataObj) {
@@ -64,7 +78,13 @@ var createTaskEl = function (taskDataObj) {
 
   tasksToDoEl.appendChild(listItemEl);
 
+  taskDataObj.id = taskIdCounter;
+  tasks.push(taskDataObj)
+
   taskIdCounter++;
+  console.log(taskDataObj);
+  console.log(taskDataObj.status)
+  saveTasks();
 }
 
 var createTaskActions = function (taskId) {
@@ -122,6 +142,16 @@ var taskButtonHandler = function (event) {
 var deleteTask = function (taskId) {
   var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
   taskSelected.remove();
+  
+  var updatedTaskArr = [];
+
+  for (var i = 0; i < tasks.length; i++) {
+    if (tasks[i].id !== parseInt(taskId)) {
+      updatedTaskArr.push(tasks[i]);
+    }
+  }
+  tasks = updatedTaskArr;
+  saveTasks();
 }
 
 var editTask = function (taskId) {
@@ -137,6 +167,10 @@ var editTask = function (taskId) {
   document.querySelector("select[name='task-type']").value = taskType;
   document.querySelector("#save-task").textContent = "Save Task";
   formEl.setAttribute("data-task-id", taskId);
+  
+  var updatedTaskArr = [];
+
+  saveTasks(); 
 }
 
 var taskStatusChangeHandler = function (event) {
@@ -151,6 +185,13 @@ var taskStatusChangeHandler = function (event) {
   } else if (statusValue === "completed") {
     tasksCompletedEl.appendChild(taskSelected);
   }
+  for (var i = 0; i < tasks.length; i++) {
+    if(tasks[i].id === parseInt(taskId)) {
+      tasks[i].status = statusValue;
+    }
+  }
+  console.log(tasks);
+  saveTasks();
 };
 
 var dragTaskHandler = function (event) {
@@ -184,6 +225,13 @@ var dropTaskHandler = function(event){
   }
   dropZoneEl.appendChild(draggableElement);
   dropZoneEl.removeAttribute("style")
+  for (var i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === parseInt(id)) {
+      tasks[i].status = statusSelectEl.value.toLowerCase();
+    }
+  }
+  
+  console.log(tasks);
 };
 var dragLeaveHandler = function(event) {
   var taskListEl = event.target.closest(".task-list");
@@ -191,6 +239,23 @@ var dragLeaveHandler = function(event) {
     taskListEl.removeAttribute("style")
   }
 }
+
+var saveTasks = function() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+var loadTasks = function() {
+    var savedTasks = localStorage.getItem("tasks");
+  
+    if (!savedTasks) {
+      return false;
+    }
+  
+    savedTasks = JSON.parse(savedTasks);
+    for (var i = 0; i < savedTasks.length; i++) {
+      createTaskEl(savedTasks[i])
+  }
+};
+loadTasks();
 pageContentEl.addEventListener("click", taskButtonHandler);
 pageContentEl.addEventListener("change", taskStatusChangeHandler);
 pageContentEl.addEventListener("dragstart", dragTaskHandler);
